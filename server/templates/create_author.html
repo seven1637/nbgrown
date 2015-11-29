@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div align="center">
+    <h1>用户注册</h1><br>
+    {% if error_text %} 
+    <span style="color:red;font-size=10px;padding:20px;">*{{ error_text }}</span><p>
+    {% end %}
+<form action="/auth/create" method="POST">
+  邮箱: <input name="email" type="text" placeholder="用于登录"><br><br>
+  姓名: <input name="name" type="text" placeholder="输入用户名"><br><br>
+  密码: <input name="password" type="password" placeholder="输入密码"><br><br>
+  <input type="submit">
+  {% module xsrf_form_html() %}
+</form>
+</div>
+{% end %}

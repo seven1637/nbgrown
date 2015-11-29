@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <div id="body_header">
+    <div class="sort_header" style="float:left">
+        <ul>
+            <li><a href="/?order=1">最新</a></li> |
+            <li><a href="/?order=2">最热</a></li>
+        </ul>
+    </div>
+    <div class="archive_header" style="float:right"><a href="/archive">标题概览</a></div>
+    </div>
+    <hr />
+  {% for entry in entries %}
+    {% module EntryHome(entry) %}
+  {% end %}
+{% end %}

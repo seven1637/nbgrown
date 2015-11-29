@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+<div align="center">
+    <h1>用户登录</h1><br>
+{% if error %}
+<span style="color: red">*{{ error }}</span><p>
+{% end %}
+<form action="/auth/login?next={{ next }}" method="POST">
+  邮箱: <input name="email" type="text"><br><br>
+  密码: <input name="password" type="password"><br><br>
+  {% module xsrf_form_html() %}
+  <input type="submit">
+</form>
+</div>
+{% end %}

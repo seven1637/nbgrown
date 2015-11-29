@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN" dropEffect="none" class="no-js">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="renderer" content="webkit" />
+
+    <title>{{ escape(handler.settings["blog_title"]) }}</title>
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="{{ static_url("blog.css") }}" type="text/css">
+    <link rel="alternate" href="/feed" type="application/atom+xml" title="{{ escape(handler.settings["blog_title"]) }}">
+    {% block head %}{% end %}
+  </head>
+  <body>
+    <div id="body">
+      <div id="header">
+        <div id="user">
+          {% if current_user %}
+          <a href="/compose">写博客</a>  - 
+            <a href="/auth/logout?next={{ url_escape(request.uri) }}">退出</a>
+          {% else %}
+            {% raw _('<a href="%(url)s">登录</a> ') % {"url": "/auth/login?next=" + url_escape(request.uri)} %} - 
+            {% raw _('<a href="/auth/create">注册</a>') %}
+          {% end %}
+        </div>
+
+        <h1><a href="/">{{ escape(handler.settings["blog_title"]) }}</a></h1>
+
+        <div role="search" class="zu-top-search">
+            <form method="GET" action="/search" class="zu-top-search-form">
+            <input type="text" class="zu-top-search-input" id="q" name="q" autocomplete="off" value="" placeholder="搜索问题、话题或人">
+            <input type="submit" class="zu-top-search-submit" value="搜索">
+            </form>
+        </div>
+
+        <div class="header_list">
+            <ul>
+                <li><a href="/">首页</a></li>
+                <li><a href="/theme/1">名人传记</a></li>
+                <li><a href="/theme/2">个人成长</a></li>
+                <li><a href="/">深度君</a></li>
+            </ul>
+        </div>
+
+      </div>
+      <div id="content">{% block body %}{% end %}</div>
+    </div>
+    {% block bottom %}{% end %}
+  </body>
+</html>

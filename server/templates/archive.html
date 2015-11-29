@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block head %}
+  <style type="text/css">
+    ul.archive {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    ul.archive li {
+      margin-bottom: 1em;
+    }
+
+    ul.archive .title {
+      font-family: "Helvetica Nue", Helvetica, Arial, sans-serif;
+      font-size: 14pt;
+    }
+  </style>
+{% end %}
+
+{% block body %}
+  <ul class="archive">
+    {% for entry in entries %}
+      <li>
+        <div class="title"><a href="/entry/{{ str(entry.id) }}">{{ entry.title }}</a></div>
+          <div class="info_ext">
+              <ul>
+                  <li>类别：<a href="/theme/{{ entry.theme }}">{{ entry.theme_name }}</a></li> |
+                  <li>作者：<a href="/author/{{ entry.author_id }}">{{ entry.author }}</a></li> |
+                  <li>阅读：{{ entry.view_count }}次</li> |
+                  <li>发布：{{ entry.published }}</li>
+              </ul>
+          </div>
+      </li>
+    {% end %}
+  </ul>
+{% end %}
