@@ -113,10 +113,10 @@ class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
         user_id = self.get_secure_cookie("blogdemo_user")
         if not user_id: return None
-        return self.db_conn_user.get("SELECT * FROM authors WHERE id = %s", int(user_id))
+        return self.db_conn_user.get("SELECT id,email,name,hashed_password FROM authors WHERE id = %s", int(user_id))
 
     def any_author_exists(self):
-        return bool(self.db_conn_user.get("SELECT * FROM authors LIMIT 1"))
+        return bool(self.db_conn_user.get("SELECT id FROM authors LIMIT 1"))
 
     def get_user_name(self, user_id):
         if user_id:
@@ -143,7 +143,8 @@ class BaseHandler(tornado.web.RequestHandler):
 class HomeHandler(BaseHandler):
     def get(self):
         order = self.get_argument('order', 1)
-        entries = self.db.query("SELECT * FROM entries ORDER BY published DESC LIMIT 50")
+        entries = self.db.query("SELECT id,author_id,theme,title,markdown,html,published FROM entries "
+                                "ORDER BY published DESC LIMIT 50")
 
         if not entries:
             self.redirect("/compose")
@@ -161,9 +162,9 @@ class HomeHandler(BaseHandler):
 class ThemeHandler(BaseHandler):
     def get(self, theme=None):
         if theme:
-            entries = self.db.query("SELECT * FROM entries WHERE theme=%s ORDER BY published DESC LIMIT 50", int(theme))
+            entries = self.db.query("SELECT id,author_id,theme,title,markdown,html,published FROM entries WHERE theme=%s ORDER BY published DESC LIMIT 50", int(theme))
         else:
-            entries = self.db.query("SELECT * FROM entries ORDER BY published DESC LIMIT 50")
+            entries = self.db.query("SELECT id,author_id,theme,title,markdown,html,published FROM entries ORDER BY published DESC LIMIT 50")
 
         if not entries:
             self.redirect("/compose")
@@ -180,9 +181,11 @@ class ThemeHandler(BaseHandler):
 class AuthorHandler(BaseHandler):
     def get(self, author_id=None):
         if author_id:
-            entries = self.db.query("SELECT * FROM entries WHERE author_id=%s ORDER BY published DESC LIMIT 50", int(author_id))
+            entries = self.db.query("SELECT id,author_id,theme,title,markdown,html,published FROM entries "
+                                "WHERE author_id=%s ORDER BY published DESC LIMIT 50", int(author_id))
         else:
-            entries = self.db.query("SELECT * FROM entries ORDER BY published DESC LIMIT 50")
+            entries = self.db.query("SELECT id,author_id,theme,title,markdown,html,published FROM entries "
+                                "ORDER BY published DESC LIMIT 50")
 
         if not entries:
             self.redirect("/compose")
@@ -202,7 +205,8 @@ class BlogHandler(BaseHandler):
 
 class EntryHandler(BaseHandler):
     def get(self, story_id):
-        entry = self.db.get("SELECT * FROM entries WHERE id = %s", int(story_id))
+        entry = self.db.get("SELECT id,author_id,theme,title,markdown,html,published FROM entries "
+                            "WHERE id = %s", int(story_id))
         if not entry:
             raise tornado.web.HTTPError(404)
         entry['theme_name'] = theme_map.get(entry['theme'])
@@ -226,7 +230,7 @@ class ArchiveHandler(BaseHandler):
 
 class FeedHandler(BaseHandler):
     def get(self):
-        entries = self.db.query("SELECT * FROM entries ORDER BY published "
+        entries = self.db.query("SELECT id,author_id,theme,title,markdown,html,published FROM entries ORDER BY published "
                 "DESC LIMIT 10")
         self.set_header("Content-Type", "application/atom+xml")
         self.render("feed.xml", entries=entries)
@@ -238,7 +242,7 @@ class ComposeHandler(BaseHandler):
         id = self.get_argument("id", None)
         entry = None
         if id:
-            entry = self.db.get("SELECT * FROM entries WHERE id = %s", int(id))
+            entry = self.db.get("SELECT id,author_id,theme,title,markdown,html,published FROM entries WHERE id = %s", int(id))
         self.render("compose.html", entry=entry)
 
     @tornado.web.authenticated
@@ -296,7 +300,7 @@ class AuthLoginHandler(BaseHandler):
 
     @gen.coroutine
     def post(self):
-        author = self.db_conn_user.get("SELECT * FROM authors WHERE email = %s",
+        author = self.db_conn_user.get("SELECT id,name,email,hashed_password FROM authors WHERE email = %s",
                 self.get_argument("email"))
         if not author:
             self.render("login.html", error="邮箱地址不匹配，请确认是否注册")
