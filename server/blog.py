@@ -78,6 +78,12 @@ class Application(tornado.web.Application):
                 host=options.mysql_host, database=options.mysql_database,
                 user=options.mysql_user, password=options.mysql_password, time_zone="+08:00")
 
+        self.db_conn_user = torndb.Connection(
+                host=options.mysql_host, database=options.mysql_database,
+                user=options.mysql_user, password=options.mysql_password, time_zone="+08:00")
+        self.db_conn_view = torndb.Connection(
+                host=options.mysql_host, database=options.mysql_database,
+                user=options.mysql_user, password=options.mysql_password, time_zone="+08:00")
         self.maybe_create_tables()
 
     def maybe_create_tables(self):
@@ -96,22 +102,30 @@ class BaseHandler(tornado.web.RequestHandler):
     def db(self):
         return self.application.db
 
+    @property
+    def db_conn_user(self):
+        return self.application.db_conn_user
+
+    @property
+    def db_conn_view(self):
+        return self.application.db_conn_view
+
     def get_current_user(self):
         user_id = self.get_secure_cookie("blogdemo_user")
         if not user_id: return None
-        return self.db.get("SELECT * FROM authors WHERE id = %s", int(user_id))
+        return self.db_conn_user.get("SELECT * FROM authors WHERE id = %s", int(user_id))
 
     def any_author_exists(self):
-        return bool(self.db.get("SELECT * FROM authors LIMIT 1"))
+        return bool(self.db_conn_user.get("SELECT * FROM authors LIMIT 1"))
 
     def get_user_name(self, user_id):
         if user_id:
-            result = self.db.get("SELECT name FROM authors WHERE id = %s", int(user_id))
+            result = self.db_conn_user.get("SELECT name FROM authors WHERE id = %s", int(user_id))
             return result['name']
 
     def get_view_count(self, entry_id):
         if entry_id:
-            result = self.db.get("SELECT SUM(view_count) FROM entry_view WHERE entry_id = %s", int(entry_id))
+            result = self.db_conn_view.get("SELECT SUM(view_count) FROM entry_view WHERE entry_id = %s", int(entry_id))
             if not result['SUM(view_count)']:
                 return 0;
             return result['SUM(view_count)']
@@ -119,7 +133,7 @@ class BaseHandler(tornado.web.RequestHandler):
     def set_view_count(self, entry_id):
         if entry_id:
             try:
-                self.db.execute(
+                self.db_conn_view.execute(
                         "INSERT INTO entry_view (entry_id, pond, view_count) VALUES (%s,FLOOR(0+(RAND()*4)),1)"
                         "ON DUPLICATE KEY UPDATE `view_count`=`view_count`+1"
                         , entry_id)
@@ -260,7 +274,7 @@ class AuthCreateHandler(BaseHandler):
                 bcrypt.gensalt())
         author_id = None
         try:
-            author_id = self.db.execute(
+            author_id = self.db_conn_user.execute(
                     "INSERT INTO authors (email, name, hashed_password) "
                     "VALUES (%s, %s, %s)",
                     self.get_argument("email"), self.get_argument("name"),
@@ -282,7 +296,7 @@ class AuthLoginHandler(BaseHandler):
 
     @gen.coroutine
     def post(self):
-        author = self.db.get("SELECT * FROM authors WHERE email = %s",
+        author = self.db_conn_user.get("SELECT * FROM authors WHERE email = %s",
                 self.get_argument("email"))
         if not author:
             self.render("login.html", error="邮箱地址不匹配，请确认是否注册")
